@@ -1,0 +1,18 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pasaporte digital de producto · Vela Textile</title>
+<link rel="stylesheet" href="assets/app.css"><script src="assets/common.js"></script>
+<script>function pp(){return{CARE,d:null,st:'',err:'',async init(){const r=await api('get',new URLSearchParams(location.search).get('d')||'');if(r.data){this.d=r.data;this.st=r.status}else this.err='Este pasaporte no existe o la demo ha caducado.'},
+get uid(){return 'urn:eu:dpp:velatextile:product:'+this.d.a.sku.replace(/[^A-Za-z0-9]/g,'')}}}</script>
+<script defer src="assets/alpine.min.js"></script><style>.wrap{max-width:520px}[x-cloak]{display:none}a{color:var(--ac)}</style></head>
+<body class="wrap" x-data="pp()" x-cloak>
+<p class="err" x-show="err" x-text="err"></p>
+<template x-if="d"><main>
+<h2>Camiseta unisex de algodón orgánico</h2><p>Vela Textile S.A. · <span x-text="d.a.sku"></span> · lote <span x-text="d.a.batch"></span><br><small x-text="uid"></small></p>
+<div class="badge" :class="st=='Published'?'ok':'no'" x-text="st=='Published'?'Pasaporte verificado':'Borrador: aún no publicado'" style="display:inline-block;margin-bottom:12px"></div>
+<div class="card"><h3>Composición</h3><template x-for="m in d.b.mat"><div><span x-text="m.p+'% '+m.n"></span><div class="seg"><i :style="`width:${m.p}%;background:var(--ac)`"></i></div></div></template><small x-text="d.b.chem"></small></div>
+<div class="card"><h3>Cadena de suministro</h3><template x-for="(s,i) in d.b.chain"><div x-text="(i+1)+'. '+s.s+' — '+s.n+' ('+s.c+')'"></div></template></div>
+<div class="card"><h3>Impacto ambiental</h3><div class="kpis"><div><div class="kpi" x-text="d.c.co2"></div>kg CO₂eq</div><div><div class="kpi" x-text="d.c.h2o"></div>litros</div><div><div class="kpi" x-text="d.c.kwh"></div>kWh</div></div>
+<p>Durabilidad: <b style="color:var(--tx)" x-text="d.c.dur+' lavados'"></b> · Microplásticos: <span x-text="d.c.micro"></span></p></div>
+<div class="card"><h3>Cuidado y fin de vida</h3><p><template x-for="k in d.d.care"><span class="badge" style="margin-right:4px" x-text="CARE[k]"></span></template></p>
+<p x-text="d.d.rec"></p><p><a :href="d.d.repair" target="_blank" rel="noopener">Guía de reparación</a> · <a :href="d.d.col" target="_blank" rel="noopener">Puntos de recogida</a></p></div>
+<p><small>Conforme al Reglamento (UE) 2024/1781 (ESPR). CSRD: <span x-text="d.a.csrd?'aplica':'no aplica'"></span> · EUDR: <span x-text="d.a.eudr?'aplica':'no aplica'"></span></small></p>
+</main></template></body></html>
