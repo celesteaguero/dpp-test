@@ -52,3 +52,6 @@ Entregada una primera versión **sin probar con PHP/MySQL reales**. Hay que veri
 
 ## Decisiones de datos ya tomadas
 Operador: Vela Textile S.A., Madrid. Energía en kWh (no MJ). Durabilidad = nº de lavados (50). Cadena de ejemplo en Egipto, Túnez y Marruecos. Normativa de referencia: ESPR 2024/1781 (no el reglamento 2023/1542 que aparecía por error en un borrador).
+
+## Cambios v2
+Añadidos: subida de certificados e imagen (`api/upload.php`, `uploads/<token>/{SKU}-{tipo}.ext`), catálogo de proveedores con modal de alta, mapa SVG de la cadena con distancia a Madrid (`mapSvg`/`dist` en `common.js`), `api/db.php` común y limpieza de archivos al caducar la demo. `uploads/.htaccess` bloquea la ejecución de scripts. Pendiente: simulación ERP, roles/capas de acceso, campos extra de la investigación, fuentes autoalojadas.

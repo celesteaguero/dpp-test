@@ -1,10 +1,14 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Editor DPP · Vela Textile</title>
 <link rel="stylesheet" href="assets/app.css"><script src="assets/qrcode.js"></script><script src="assets/common.js"></script>
 <script>
-function app(){return{FIB,CARE,MICRO,URLOK,d:SAMPLE(),tok:'',st:'Draft',qr:'',url:'',t:0,open:{a:1,b:1,c:1,d:1},ready:0,
+function app(){return{FIB,CARE,MICRO,URLOK,mapSvg,dist,CERTS:['GOTS','GRS','OEKO-TEX Standard 100','BCI'],ct:'GOTS',ns:{n:'',c:'',lat:'',lon:''},busy:'',d:SAMPLE(),tok:'',st:'Draft',qr:'',url:'',t:0,open:{a:1,b:1,c:1,d:1},ready:0,
 async init(){this.tok=new URLSearchParams(location.search).get('d')||'';
 let r=this.tok?await api('get',this.tok):{};if(!r.data){r=await api('new','',SAMPLE());if(!r.token)return alert('No se pudo conectar con la base de datos (revisa config.php).');this.tok=r.token}
-history.replaceState(0,'','?d='+this.tok);this.d=r.data;this.st=r.status;this.ready=1;this.$watch('d',()=>{this.st='Draft';this.qr='';clearTimeout(this.t);this.t=setTimeout(()=>this.persist(),600)},{deep:true})},
+history.replaceState(0,'','?d='+this.tok);this.d=fix(r.data);this.st=r.status;this.ready=1;this.$watch('d',()=>{this.st='Draft';this.qr='';clearTimeout(this.t);this.t=setTimeout(()=>this.persist(),600)},{deep:true})},
+async up(ty,ev,cb){const f=ev.target.files[0];if(!f)return;this.busy=ty;const r=await upl(this.tok,ty,f);this.busy='';ev.target.value='';if(r.error)return alert('No se pudo subir: '+r.error);cb(r)},
+pick(s,n){const p=this.d.sup.find(x=>x.n==n);if(p){s.n=p.n;s.c=p.c;s.lat=p.lat;s.lon=p.lon}},
+addSup(){const n=this.ns;if(!n.n.trim()||n.lat===''||n.lon===''||!(Math.abs(n.lat)<=90)||!(Math.abs(n.lon)<=180))return alert('Indica nombre, latitud (-90 a 90) y longitud (-180 a 180).');this.d.sup.push({n:n.n.trim(),c:n.c,lat:+n.lat,lon:+n.lon});this.ns={n:'',c:'',lat:'',lon:''};this.$refs.dlg.close()},
+async delFile(f){await fetch('api/upload.php?d='+this.tok+'&del='+encodeURIComponent(f.file),{method:'POST'});this.d.b.certs=this.d.b.certs.filter(x=>x!==f)},
 persist(){return api('save',this.tok,this.d)},
 get total(){return Math.round(this.d.b.mat.reduce((s,m)=>s+(+m.p||0),0)*100)/100},
 get uid(){return 'urn:eu:dpp:velatextile:product:'+this.d.a.sku.replace(/[^A-Za-z0-9]/g,'')},
@@ -33,6 +37,7 @@ get svg(){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(this.qr)
 <div><label>UID de lote</label><input x-model="d.a.batch"></div>
 <div><label>GTIN / SKU *</label><input x-model="d.a.sku" :class="!skuOk&&'bad'"></div>
 <div><label>Operador económico</label><input disabled value="Vela Textile S.A. · Madrid, España"></div>
+<div class="full"><label>Imagen del producto (JPG/PNG, máx. 5 MB)</label><input type="file" accept="image/png,image/jpeg" @change="up('imagen',$event,r=>d.a.img=r.url)"><img x-show="d.a.img" :src="d.a.img" alt="" style="max-height:120px;margin-top:8px;border-radius:8px"></div>
 <div class="full chips"><label><input type="checkbox" x-model="d.a.csrd">Aplica CSRD</label><label><input type="checkbox" x-model="d.a.eudr">Aplica EUDR</label></div></div></section>
 
 <section class="mod"><button @click="open.b=!open.b">B · Suministro y materiales<span x-text="open.b?'−':'+'"></span></button><div class="body" x-show="open.b">
@@ -42,7 +47,11 @@ get svg(){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(this.qr)
 <input type="number" min="0" max="100" step="0.1" x-model.number="m.p" style="width:110px" :class="total!=100&&'bad'"><button class="btn" @click="d.b.mat.splice(i,1)" aria-label="Quitar fibra">✕</button></div></template>
 <div class="full"><button class="btn" @click="d.b.mat.push({n:FIB[0],p:0})">+ Añadir fibra</button></div>
 <div class="full"><label>Cadena multi-tier (de materia prima a producto final)</label></div>
-<template x-for="(s,i) in d.b.chain"><div class="full row"><b style="width:120px;color:var(--tx)" x-text="(i+1)+'. '+s.s"></b><input x-model="s.n" placeholder="Instalación"><input x-model="s.c" placeholder="País" style="width:150px"></div></template>
+<template x-for="(s,i) in d.b.chain"><div class="full row"><b style="width:120px;color:var(--tx)" x-text="(i+1)+'. '+s.s"></b><select @change="pick(s,$event.target.value)"><template x-for="p in d.sup"><option :value="p.n" x-text="p.n+' · '+p.c" :selected="p.n==s.n"></option></template></select></div></template>
+<div class="full"><button class="btn" @click="$refs.dlg.showModal()">+ Nuevo proveedor</button></div>
+<div class="full"><label>Mapa de trazabilidad · <span x-text="dist(d.b.chain)+' km hasta Madrid (sede)'"></span></label><div x-html="mapSvg(d.b.chain)"></div></div>
+<div class="full"><label>Certificaciones y auditorías (PDF/PNG/JPG, máx. 5 MB)</label><div class="row"><select x-model="ct" style="width:240px"><template x-for="c in CERTS"><option x-text="c"></option></template></select><input type="file" accept=".pdf,.png,.jpg,.jpeg" @change="up(ct,$event,r=>d.b.certs.push({type:ct,file:r.file,url:r.url}))"><span x-show="busy">Subiendo…</span></div>
+<template x-for="f in d.b.certs"><div class="row" style="margin-top:6px"><a :href="f.url" target="_blank" x-text="f.file" style="color:var(--ac)"></a><button class="btn" @click="delFile(f)" aria-label="Quitar archivo">✕</button></div></template></div>
 <div class="full"><label>Tratamientos químicos y SVHC</label><textarea rows="3" x-model="d.b.chem"></textarea></div></div></section>
 
 <section class="mod"><button @click="open.c=!open.c">C · Impacto ambiental (LCA)<span x-text="open.c?'−':'+'"></span></button><div class="body" x-show="open.c">
@@ -57,4 +66,7 @@ get svg(){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(this.qr)
 <div><label>Guía de reparación (https://)</label><input type="url" x-model="d.d.repair" :class="!URLOK(d.d.repair)&&'bad'"></div>
 <div><label>Localizador de puntos de recogida (https://)</label><input type="url" x-model="d.d.col" :class="!URLOK(d.d.col)&&'bad'"></div>
 <div class="full"><label>Reciclabilidad y compostabilidad</label><textarea rows="3" x-model="d.d.rec"></textarea></div></div></section>
+<dialog x-ref="dlg" style="background:var(--cd);color:var(--t2);border:1px solid var(--bd);border-radius:12px;width:min(420px,92vw)"><h3>Nuevo proveedor</h3>
+<label>Nombre</label><input x-model="ns.n"><label>País</label><input x-model="ns.c"><div class="row"><div><label>Latitud</label><input type="number" step="any" x-model="ns.lat"></div><div><label>Longitud</label><input type="number" step="any" x-model="ns.lon"></div></div>
+<div class="row" style="margin-top:12px"><button class="btn pri" @click="addSup()">Guardar</button><button class="btn" @click="$refs.dlg.close()">Cancelar</button></div></dialog>
 </body></html>

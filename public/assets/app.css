@@ -18,3 +18,4 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--ac)}input[r
 .card{background:var(--cd);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:12px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.kpi{font-size:24px;color:var(--tx);font-weight:700}
 @media(max-width:640px){.body,.kpis{grid-template-columns:1fr}}
+.map{width:100%;height:auto;background:var(--bg);border:1px solid var(--bd);border-radius:8px}.gr line{stroke:rgba(255,255,255,.09)}dialog::backdrop{background:rgba(0,0,0,.6)}
