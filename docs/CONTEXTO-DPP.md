@@ -34,7 +34,7 @@ Tabla MySQL `demo(token, data, status Draft|Published, created_at, updated_at)`.
 Suma de fibras = 100% (en vivo, rojo/verde) · SKU alfanumérico con guiones · durabilidad entero > 0 · huella de carbono > 0 · URLs con `https://`. "Publicar" queda bloqueado hasta cumplirlas. Al publicar se genera QR SVG descargable y enlace a `dpp.html?d=TOKEN`.
 
 ## Diseño
-Tema oscuro con acento turquesa (`#00e5c8`), fondo `#0f1117`, tarjetas `#242838`, fuente Inter con respaldo del sistema. CSS propio sin build.
+Tema oscuro azul (fase 1 aplicada): fondo `#12131a`, módulos `#1a1b22`, campos `#242632`; acento `#7a94eb` (texto), `#506fe1` (bordes), `#4968da` (botones, texto blanco). Contraste WCAG AA verificado (ver `DESIGN.md` 1.6). Tipografía Inter 16 px; etiquetas 600.
 
 ## Estado
 Entregada una primera versión **sin probar con PHP/MySQL reales**. Hay que verificar:

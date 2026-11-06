@@ -1,15 +1,22 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Editor DPP · Vela Textile</title>
 <link rel="stylesheet" href="assets/app.css"><script src="assets/qrcode.js"></script><script src="assets/common.js"></script>
 <script>
-function app(){return{FIB,CARE,MICRO,URLOK,mapSvg,dist,CERTS:['GOTS','GRS','OEKO-TEX Standard 100','BCI'],ct:'GOTS',ns:{n:'',c:'',lat:'',lon:''},busy:'',d:SAMPLE(),tok:'',st:'Draft',qr:'',url:'',t:0,open:{a:1,b:1,c:1,d:1},ready:0,
+function app(){return{FIB,CARE,MICRO,URLOK,mapSvg,dist,CERTS:['GOTS','GRS','OEKO-TEX Standard 100','BCI'],ct:'GOTS',ns:{n:'',c:'',lat:'',lon:''},busy:'',d:SAMPLE(),tok:'',st:'Draft',qr:'',url:'',t:0,open:{a:1,b:1,c:1,d:1},ready:0,saved:0,meta:{created:'',updated:'',hist:[]},
 async init(){this.tok=new URLSearchParams(location.search).get('d')||'';
 let r=this.tok?await api('get',this.tok):{};if(!r.data){r=await api('new','',SAMPLE());if(!r.token)return alert('No se pudo conectar con la base de datos (revisa config.php).');this.tok=r.token}
-history.replaceState(0,'','?d='+this.tok);this.d=fix(r.data);this.st=r.status;this.ready=1;this.$watch('d',()=>{this.st='Draft';this.qr='';clearTimeout(this.t);this.t=setTimeout(()=>this.persist(),600)},{deep:true})},
-async up(ty,ev,cb){const f=ev.target.files[0];if(!f)return;this.busy=ty;const r=await upl(this.tok,ty,f);this.busy='';ev.target.value='';if(r.error)return alert('No se pudo subir: '+r.error);cb(r)},
+history.replaceState(0,'','?d='+this.tok);const now=new Date().toISOString(),had=!!r.data.m;this.meta=r.data.m||{created:now,updated:now,hist:[{t:now,m:'Creación del pasaporte'}]};delete r.data.m;this.d=fix(r.data);this.st=r.status;this.ready=1;this.$watch('d',()=>{this.st='Draft';this.qr='';clearTimeout(this.t);this.t=setTimeout(()=>this.persist(),600)},{deep:true});if(!had)this.persist()},
+async up(ty,ev,cb){const f=ev.target.files[0];ev.target.value='';return this.upf(ty,f,cb)},
+async upf(ty,f,cb){if(!f)return;this.busy=ty;const r=await upl(this.tok,ty,f);this.busy='';if(r.error)return alert('No se pudo subir: '+r.error);cb(r)},
+fmt(t){return t?new Date(t).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):''},
+hist(m){this.meta.hist=[{t:new Date().toISOString(),m},...this.meta.hist].slice(0,5)},
+toggleAll(){const v=!this.allOpen;for(const k in this.open)this.open[k]=v},
+async saveNow(){clearTimeout(this.t);this.hist('Guardado manual');await this.persist();this.saved=1;setTimeout(()=>this.saved=0,2000)},
 pick(s,n){const p=this.d.sup.find(x=>x.n==n);if(p){s.n=p.n;s.c=p.c;s.lat=p.lat;s.lon=p.lon}},
 addSup(){const n=this.ns;if(!n.n.trim()||n.lat===''||n.lon===''||!(Math.abs(n.lat)<=90)||!(Math.abs(n.lon)<=180))return alert('Indica nombre, latitud (-90 a 90) y longitud (-180 a 180).');this.d.sup.push({n:n.n.trim(),c:n.c,lat:+n.lat,lon:+n.lon});this.ns={n:'',c:'',lat:'',lon:''};this.$refs.dlg.close()},
 async delFile(f){await fetch('api/upload.php?d='+this.tok+'&del='+encodeURIComponent(f.file),{method:'POST'});this.d.b.certs=this.d.b.certs.filter(x=>x!==f)},
-persist(){return api('save',this.tok,this.d)},
+persist(){this.meta.updated=new Date().toISOString();return api('save',this.tok,{...this.d,m:this.meta})},
+get allOpen(){return Object.values(this.open).every(v=>v)},
+get ok(){const d=this.d;return{a:this.skuOk&&!!(d.a.name||'').trim(),b:this.total==100,c:Number.isInteger(+d.c.dur)&&d.c.dur>0&&d.c.co2>0,d:URLOK(d.d.repair)&&URLOK(d.d.col)}},
 get total(){return Math.round(this.d.b.mat.reduce((s,m)=>s+(+m.p||0),0)*100)/100},
 get uid(){return 'urn:eu:dpp:velatextile:product:'+this.d.a.sku.replace(/[^A-Za-z0-9]/g,'')},
 get skuOk(){return /^[A-Za-z0-9-]+$/.test(this.d.a.sku)},
@@ -18,30 +25,39 @@ if(!this.skuOk)e.push('El SKU solo admite letras, números y guiones');
 if(!(Number.isInteger(+d.c.dur)&&d.c.dur>0))e.push('Durabilidad: entero mayor que 0');
 if(!(d.c.co2>0))e.push('Huella de carbono: valor mayor que 0');
 if(!URLOK(d.d.repair))e.push('Reparación: URL que empiece por https://');if(!URLOK(d.d.col))e.push('Recogida: URL que empiece por https://');return e},
-async publish(){clearTimeout(this.t);await this.persist();const r=await api('publish',this.tok);if(r.error)return alert('No se pudo publicar: '+r.error);
+async publish(){clearTimeout(this.t);this.hist('Publicado');await this.persist();const r=await api('publish',this.tok);if(r.error)return alert('No se pudo publicar: '+r.error);
 this.st='Published';this.url=location.href.replace(/[?#].*$/,'').replace(/[^\/]*$/,'')+'dpp.html?d='+this.tok;const q=qrcode(0,'M');q.addData(this.url);q.make();this.qr=q.createSvgTag(4)},
 get svg(){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(this.qr)}}}
 </script><script defer src="assets/alpine.min.js"></script><style>[x-cloak]{display:none}</style></head>
-<body class="wrap" x-data="app()" x-cloak>
-<h2>Pasaporte digital de producto · Vela Textile</h2>
-<div class="bar"><span class="badge" :class="st=='Published'&&'ok'" x-text="st=='Published'?'Publicado':'Borrador'"></span>
-<button class="btn pri" :disabled="errs.length||!ready" @click="publish()">Publicar</button>
-<a class="btn" :href="'dpp.html?d='+tok" target="dpp">Previsualizar DPP</a>
+<body x-data="app()" x-cloak>
+<header class="nav"><div><span class="logo">VELA <b>Textile</b></span><span class="lk"><a class="on" href="#">Pasaportes</a><a aria-disabled="true" title="Próximamente">Proveedores</a><a aria-disabled="true" title="Próximamente">Certificaciones</a></span><button class="ib" aria-label="Notificaciones"><svg class="ic"><use href="assets/icons.svg#i-notifications"/></svg></button><span class="av" aria-hidden="true">VT</span></div></header>
+<main class="wrap">
+<div class="bar"><button class="btn" @click="toggleAll()"><svg class="ic"><use :href="'assets/icons.svg#i-'+(allOpen?'unfold_less':'unfold_more')"/></svg><span x-text="allOpen?'Contraer todo':'Expandir todo'"></span></button>
+<button class="btn" @click="saveNow()"><svg class="ic"><use href="assets/icons.svg#i-save"/></svg><span x-text="saved?'Guardado ✓':'Guardar cambios'"></span></button>
+<button class="btn pri" :disabled="errs.length||!ready" @click="publish()"><svg class="ic"><use href="assets/icons.svg#i-publish"/></svg>Publicar</button>
+<span class="pill"><i class="dot"></i><small>Estado del pasaporte</small><b x-text="st=='Published'?'Publicado':'Pendiente'"></b></span>
+<a class="btn out" :href="'dpp.html?d='+tok" target="dpp"><svg class="ic"><use href="assets/icons.svg#i-visibility"/></svg>Previsualizar DPP</a>
 <button class="btn" @click="location.href=location.pathname">Nueva demo</button></div>
 <div class="card err" x-show="errs.length"><b>Para publicar falta:</b><template x-for="e in errs"><div x-text="'· '+e"></div></template></div>
 <div class="card row" x-show="qr"><div x-html="qr" style="width:120px;background:#fff;padding:6px;border-radius:8px"></div>
 <div>Pasaporte publicado.<br><a :href="url" target="_blank" x-text="url" style="color:var(--ac)"></a><br><br><a class="btn" :href="svg" download="qr-dpp.svg">Descargar QR (.svg)</a></div></div>
 
-<section class="mod"><button @click="open.a=!open.a">A · Identificación y gobernanza<span x-text="open.a?'−':'+'"></span></button><div class="body" x-show="open.a">
+<section class="mod"><button @click="open.a=!open.a" :aria-expanded="!!open.a"><div class="hd"><svg class="ic"><use href="assets/icons.svg#i-verified_user"/></svg><div><h3>Identificación y gobernanza</h3><small>Control del producto, registros ERP y normativas</small></div></div><div class="rt"><span class="st" :class="ok.a&&'done'"><svg class="ic" x-show="ok.a"><use href="assets/icons.svg#i-check"/></svg></span><svg class="ic ch" :class="open.a&&'up'"><use href="assets/icons.svg#i-expand_more"/></svg></div></button><div class="body" x-show="open.a">
+<div><label>Imagen de la prenda</label><label class="drop" @dragover.prevent @drop.prevent="upf('imagen',$event.dataTransfer.files[0],r=>d.a.img=r.url)"><img x-show="d.a.img" :src="d.a.img" alt="Imagen de la prenda"><span class="dz" x-show="!d.a.img"><svg class="ic"><use href="assets/icons.svg#i-add_a_photo"/></svg><b>Haga clic para subir o arrastre la foto aquí</b><small>JPG, PNG (máx. 5 MB)</small></span><input type="file" hidden accept="image/png,image/jpeg" @change="up('imagen',$event,r=>d.a.img=r.url)"></label></div>
+<div class="stack"><div><label>Nombre del producto</label><input x-model="d.a.name" :class="!(d.a.name||'').trim()&&'bad'"></div>
+<div><label>Color</label><div class="row"><input type="color" x-model="d.a.color" aria-label="Selector de color" style="width:56px;padding:4px"><input x-model="d.a.colorName" placeholder="Nombre del color"></div></div>
+<div class="pill" style="justify-content:space-between"><small>Vista previa del color</small><span class="row"><i class="sw" :style="'background:'+d.a.color"></i><b x-text="d.a.colorName"></b></span></div></div>
 <div><label>UID de producto (automático)</label><input readonly :value="uid"></div>
 <div><label>UID de lote</label><input x-model="d.a.batch"></div>
 <div><label>GTIN / SKU *</label><input x-model="d.a.sku" :class="!skuOk&&'bad'"></div>
 <div><label>Operador económico</label><input disabled value="Vela Textile S.A. · Madrid, España"></div>
-<div class="full"><label>Imagen del producto (JPG/PNG, máx. 5 MB)</label><input type="file" accept="image/png,image/jpeg" @change="up('imagen',$event,r=>d.a.img=r.url)"><img x-show="d.a.img" :src="d.a.img" alt="" style="max-height:120px;margin-top:8px;border-radius:8px"></div>
-<div class="full chips"><label><input type="checkbox" x-model="d.a.csrd">Aplica CSRD</label><label><input type="checkbox" x-model="d.a.eudr">Aplica EUDR</label></div></div></section>
+<div class="full chips"><label><input type="checkbox" x-model="d.a.csrd">Aplica CSRD</label><label><input type="checkbox" x-model="d.a.eudr">Aplica EUDR</label></div>
+<div class="full row" style="align-items:stretch"><div class="card" style="flex:1;margin:0"><label>Fecha de creación</label><div><svg class="ic"><use href="assets/icons.svg#i-schedule"/></svg> <span x-text="fmt(meta.created)"></span></div><div style="margin-top:8px;color:var(--tm)">Última modificación: <span x-text="fmt(meta.updated)"></span></div></div>
+<div class="card" style="flex:1;margin:0"><label>Historial de modificaciones</label><template x-for="(e,i) in meta.hist.slice(0,3)"><div :style="i?'color:var(--tm)':''"><svg class="ic"><use :href="'assets/icons.svg#i-'+(i?'history':'update')"/></svg> <span x-text="fmt(e.t)+' · '+e.m"></span></div></template></div></div>
+</div></section>
 
-<section class="mod"><button @click="open.b=!open.b">B · Suministro y materiales<span x-text="open.b?'−':'+'"></span></button><div class="body" x-show="open.b">
-<div class="full"><label>Materiales y porcentajes</label><div class="seg"><template x-for="(m,i) in d.b.mat"><i :style="`width:${Math.min(m.p||0,100)}%;background:hsl(170 70% ${28+i*17}%)`"></i></template></div>
+<section class="mod"><button @click="open.b=!open.b" :aria-expanded="!!open.b"><div class="hd"><svg class="ic"><use href="assets/icons.svg#i-inventory_2"/></svg><div><h3>Suministro y materiales</h3><small>Composición, trazabilidad multi-tier y certificados</small></div></div><div class="rt"><span class="st" :class="ok.b&&'done'"><svg class="ic" x-show="ok.b"><use href="assets/icons.svg#i-check"/></svg></span><svg class="ic ch" :class="open.b&&'up'"><use href="assets/icons.svg#i-expand_more"/></svg></div></button><div class="body" x-show="open.b">
+<div class="full"><label>Materiales y porcentajes</label><div class="seg"><template x-for="(m,i) in d.b.mat"><i :style="`width:${Math.min(m.p||0,100)}%;background:hsl(228 70% ${50+i*14}%)`"></i></template></div>
 <span class="badge" :class="total==100?'ok':'no'" x-text="'Total '+total+'%'"></span></div>
 <template x-for="(m,i) in d.b.mat"><div class="full row"><select x-model="m.n"><template x-for="f in FIB"><option x-text="f"></option></template></select>
 <input type="number" min="0" max="100" step="0.1" x-model.number="m.p" style="width:110px" :class="total!=100&&'bad'"><button class="btn" @click="d.b.mat.splice(i,1)" aria-label="Quitar fibra">✕</button></div></template>
@@ -54,19 +70,19 @@ get svg(){return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(this.qr)
 <template x-for="f in d.b.certs"><div class="row" style="margin-top:6px"><a :href="f.url" target="_blank" x-text="f.file" style="color:var(--ac)"></a><button class="btn" @click="delFile(f)" aria-label="Quitar archivo">✕</button></div></template></div>
 <div class="full"><label>Tratamientos químicos y SVHC</label><textarea rows="3" x-model="d.b.chem"></textarea></div></div></section>
 
-<section class="mod"><button @click="open.c=!open.c">C · Impacto ambiental (LCA)<span x-text="open.c?'−':'+'"></span></button><div class="body" x-show="open.c">
+<section class="mod"><button @click="open.c=!open.c" :aria-expanded="!!open.c"><div class="hd"><svg class="ic"><use href="assets/icons.svg#i-eco"/></svg><div><h3>Impacto ambiental (LCA)</h3><small>Datos de laboratorio y huellas analíticas</small></div></div><div class="rt"><span class="st" :class="ok.c&&'done'"><svg class="ic" x-show="ok.c"><use href="assets/icons.svg#i-check"/></svg></span><svg class="ic ch" :class="open.c&&'up'"><use href="assets/icons.svg#i-expand_more"/></svg></div></button><div class="body" x-show="open.c">
 <div><label>Durabilidad (lavados)</label><input type="number" min="1" step="1" x-model.number="d.c.dur" :class="!(d.c.dur>0)&&'bad'"></div>
 <div><label>Huella de carbono (kg CO₂eq)</label><input type="number" min="0" step="0.1" x-model.number="d.c.co2" :class="!(d.c.co2>0)&&'bad'"></div>
 <div><label>Huella hídrica (L)</label><input type="number" min="0" step="1" x-model.number="d.c.h2o"></div>
 <div><label>Demanda energética (kWh)</label><input type="number" min="0" step="1" x-model.number="d.c.kwh"></div>
 <div class="full"><label>Emisión de microplásticos</label><select x-model="d.c.micro"><template x-for="m in MICRO"><option x-text="m" :selected="m==d.c.micro"></option></template></select></div></div></section>
 
-<section class="mod"><button @click="open.d=!open.d">D · Circularidad y fin de vida<span x-text="open.d?'−':'+'"></span></button><div class="body" x-show="open.d">
-<div class="full chips"><label style="border:0;padding-left:0">Cuidado</label><template x-for="(v,k) in CARE"><label><input type="checkbox" :value="k" x-model="d.d.care"><span x-text="v"></span></label></template></div>
+<section class="mod"><button @click="open.d=!open.d" :aria-expanded="!!open.d"><div class="hd"><svg class="ic"><use href="assets/icons.svg#i-recycling"/></svg><div><h3>Circularidad y fin de vida</h3><small>Instrucciones de cuidado, reparación y reciclaje</small></div></div><div class="rt"><span class="st" :class="ok.d&&'done'"><svg class="ic" x-show="ok.d"><use href="assets/icons.svg#i-check"/></svg></span><svg class="ic ch" :class="open.d&&'up'"><use href="assets/icons.svg#i-expand_more"/></svg></div></button><div class="body" x-show="open.d">
+<div class="full chips"><label style="border:0;padding-left:0;background:none">Cuidado</label><template x-for="(v,k) in CARE"><label><input type="checkbox" :value="k" x-model="d.d.care"><span x-text="v"></span></label></template></div>
 <div><label>Guía de reparación (https://)</label><input type="url" x-model="d.d.repair" :class="!URLOK(d.d.repair)&&'bad'"></div>
 <div><label>Localizador de puntos de recogida (https://)</label><input type="url" x-model="d.d.col" :class="!URLOK(d.d.col)&&'bad'"></div>
 <div class="full"><label>Reciclabilidad y compostabilidad</label><textarea rows="3" x-model="d.d.rec"></textarea></div></div></section>
 <dialog x-ref="dlg" style="background:var(--cd);color:var(--t2);border:1px solid var(--bd);border-radius:12px;width:min(420px,92vw)"><h3>Nuevo proveedor</h3>
 <label>Nombre</label><input x-model="ns.n"><label>País</label><input x-model="ns.c"><div class="row"><div><label>Latitud</label><input type="number" step="any" x-model="ns.lat"></div><div><label>Longitud</label><input type="number" step="any" x-model="ns.lon"></div></div>
 <div class="row" style="margin-top:12px"><button class="btn pri" @click="addSup()">Guardar</button><button class="btn" @click="$refs.dlg.close()">Cancelar</button></div></dialog>
-</body></html>
+</main></body></html>

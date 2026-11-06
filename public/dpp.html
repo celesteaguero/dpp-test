@@ -6,7 +6,7 @@ get uid(){return 'urn:eu:dpp:velatextile:product:'+this.d.a.sku.replace(/[^A-Za-
 <body class="wrap" x-data="pp()" x-cloak>
 <p class="err" x-show="err" x-text="err"></p>
 <template x-if="d"><main>
-<img x-show="d.a.img" :src="d.a.img" alt="Producto" style="max-width:100%;border-radius:12px;margin-bottom:8px"><h2>Camiseta unisex de algodón orgánico</h2><p>Vela Textile S.A. · <span x-text="d.a.sku"></span> · lote <span x-text="d.a.batch"></span><br><small x-text="uid"></small></p>
+<img x-show="d.a.img" :src="d.a.img" alt="Producto" style="max-width:100%;border-radius:12px;margin-bottom:8px"><h2 x-text="d.a.name"></h2><p>Vela Textile S.A. · <span x-text="d.a.sku"></span> · lote <span x-text="d.a.batch"></span><span x-show="d.a.colorName"> · <span x-text="d.a.colorName"></span></span><br><small x-text="uid"></small></p>
 <div class="badge" :class="st=='Published'?'ok':'no'" x-text="st=='Published'?'Pasaporte verificado':'Borrador: aún no publicado'" style="display:inline-block;margin-bottom:12px"></div>
 <div class="card"><h3>Composición</h3><template x-for="m in d.b.mat"><div><span x-text="m.p+'% '+m.n"></span><div class="seg"><i :style="`width:${m.p}%;background:var(--ac)`"></i></div></div></template><small x-text="d.b.chem"></small></div>
 <div class="card"><h3>Cadena de suministro</h3><template x-for="(s,i) in d.b.chain"><div x-text="(i+1)+'. '+s.s+' — '+s.n+' ('+s.c+')'"></div></template><div x-html="mapSvg(d.b.chain)" style="margin-top:8px"></div><small x-text="dist(d.b.chain)+' km hasta Madrid (sede)'"></small>
