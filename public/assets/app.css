@@ -47,3 +47,6 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--ac)}input[r
 @media(max-width:640px){.gx{grid-template-columns:1fr}}
 
 .mod{scroll-margin-top:80px}.navnx{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.1);padding-top:24px}.navnx .err{flex:1 0 100%}.navnx .btn.pri{margin-left:auto}
+
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}.up,.drop{position:relative}.up:focus-within,.drop:focus-within{outline:2px solid var(--ac);outline-offset:2px}
+.lbl{display:block;font:600 16px/1.4 Inter,system-ui,sans-serif;color:var(--tx);margin-bottom:8px}
