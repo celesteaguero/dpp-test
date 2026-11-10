@@ -1,3 +1,12 @@
+# v0.7.0 · Accesibilidad AAA, pasos 2 y 3: contraste y errores
+- Contraste 7:1 en todo el texto (auditado con navegador en editor, estado con errores y dpp.html; 0 fallos). Nueva paleta de texto: `--t2` #c4c9d2, `--tm` #b2b4be, `--ac` #bac7f5, `--er` #f79c9c, `--ok` #3dcc71; botón principal `--ac6` #374fa6 (blanco 7,4:1) y hover `--ac7` #2c48a8. Bordes y gráficos conservan #506fe1 (3:1). Mapa de la cadena con pines y líneas #bac7f5.
+- Campos de solo lectura sin transparencia (borde discontinuo en lugar de opacidad).
+- Errores: mensaje junto a cada campo ("Error: …"), enlazado con `aria-describedby`, `aria-live="polite"` y `aria-invalid`; incluye el total de fibras.
+- Siguiente y Publicar ya no se deshabilitan (`aria-disabled`): al pulsarlos con errores muestran la lista y mueven el foco al primer campo pendiente. Cada elemento de la lista es un enlace que abre el módulo y enfoca el campo.
+- Foco visible reforzado (contorno de 3 px) en campos, botones y enlaces; antes `outline:0` lo anulaba en los campos.
+- Tamaño de objetivos mínimo de 44×44 px en botones, iconos de subida y chips (auditado: 0 por debajo).
+- Pendiente AAA: revisión de nivel de lectura y lenguaje, orden de tabulación y lector de pantalla real, `dpp.html` (encabezados y regiones).
+
 # v0.6.0 · Accesibilidad AAA, paso 1: etiquetas
 - Todos los campos (69 en la demo) tienen `<label>` asociado (`for`/`id`, con ids dinámicos en fibras y etapas); verificado sin ids duplicados.
 - Fibras: etiquetas ocultas visualmente ("Fibra 1", "Porcentaje de la fibra 1") en lugar de `aria-label`.

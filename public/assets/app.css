@@ -1,5 +1,5 @@
 @font-face{font-family:Inter;font-weight:100 900;font-display:swap;src:url(fonts/inter.woff2) format("woff2")}@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(fonts/jbmono.woff2) format("woff2")}
-:root{--bg:#12131a;--sf:#1a1b22;--cd:#1a1b22;--pn:#242632;--el:#2e3040;--tx:#fff;--t2:#a3aab8;--tm:#9698a6;--ac:#7a94eb;--ac5:#506fe1;--ac6:#4968da;--ac7:#3455c6;--ok:#22c55e;--wn:#f59e0b;--er:#f36f6f;--bd:rgba(80,111,225,.35);--bc:#506fe1}
+:root{--bg:#12131a;--sf:#1a1b22;--cd:#1a1b22;--pn:#242632;--el:#2e3040;--tx:#fff;--t2:#c4c9d2;--tm:#b2b4be;--ac:#bac7f5;--ac5:#506fe1;--ac6:#374fa6;--ac7:#2c48a8;--ok:#3dcc71;--wn:#f59e0b;--er:#f79c9c;--bd:rgba(80,111,225,.35);--bc:#506fe1}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t2);font:16px/1.65 Inter,system-ui,sans-serif}
 .wrap{max-width:1152px;margin:auto;padding:32px 24px}h2,h3{color:var(--tx);margin:8px 0}
 .bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:16px 0 32px}
@@ -50,3 +50,11 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--ac)}input[r
 
 .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}.up,.drop{position:relative}.up:focus-within,.drop:focus-within{outline:2px solid var(--ac);outline-offset:2px}
 .lbl{display:block;font:600 16px/1.4 Inter,system-ui,sans-serif;color:var(--tx);margin-bottom:8px}
+
+input[readonly]{opacity:1;border-style:dashed}
+
+.fe{color:var(--er);margin:6px 0 0;font-size:15px}.fe:empty{display:none}.fe:not(:empty)::before{content:"Error: ";font-weight:700}
+.btn.pri[aria-disabled=true]{background:var(--pn);border:2px dashed var(--bc);color:var(--tx);cursor:not-allowed}
+.navnx a,.card.err a{color:var(--er);text-decoration:underline;display:inline-block;padding:6px 0;min-height:44px;line-height:32px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.btn,.ib,.slot a,.slot button,.ct,.care,.chips label{min-width:44px;min-height:44px}
