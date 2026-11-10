@@ -1,3 +1,12 @@
+# v0.8.0 · Accesibilidad AAA, paso 4: estructura, idioma y lenguaje claro
+- Jerarquía de títulos coherente. Editor: h1 (oculto visualmente) > h2 módulos > h3 fibras y etapas; el diálogo de proveedor usa h2. dpp.html: h1 nombre del producto > h2 secciones > h3 subapartados.
+- `<html lang="es">` ya estaba en ambas páginas; añadido `lang="en"` en las partes en inglés (marca, Ginning/Spinning…, TIER/FINAL STEP). Textos de subida de TC pasan a español.
+- Zonas de la página: enlace "Saltar al contenido principal", `<nav>` principal, `<main>`, `<header>` y `<footer>` (dpp), módulos como `section` con `aria-labelledby`, botones con `aria-controls`.
+- Lenguaje claro: 13 ayudas cortas en lenguaje sencillo bajo los campos técnicos, enlazadas con `aria-describedby`; glosario de siglas en ambas páginas y primera aparición de cada sigla con `<abbr>`.
+- Enlaces que abren pestaña nueva avisan de ello (texto para lector de pantalla).
+- Verificado con axe-core (WCAG 2 A/AA/AAA y buenas prácticas): 0 incumplimientos en editor, editor con errores y dpp.html; contraste 7:1 sigue sin fallos; orden de tabulación = orden visual.
+- Pendiente: prueba con lector de pantalla real y revisión del texto de los contenidos de ejemplo.
+
 # v0.7.0 · Accesibilidad AAA, pasos 2 y 3: contraste y errores
 - Contraste 7:1 en todo el texto (auditado con navegador en editor, estado con errores y dpp.html; 0 fallos). Nueva paleta de texto: `--t2` #c4c9d2, `--tm` #b2b4be, `--ac` #bac7f5, `--er` #f79c9c, `--ok` #3dcc71; botón principal `--ac6` #374fa6 (blanco 7,4:1) y hover `--ac7` #2c48a8. Bordes y gráficos conservan #506fe1 (3:1). Mapa de la cadena con pines y líneas #bac7f5.
 - Campos de solo lectura sin transparencia (borde discontinuo en lugar de opacidad).
